@@ -22,7 +22,7 @@ const Signin = () => {
   },[user])
 
   return (
-    <div>
+    <div className='w-fit m-auto mt-10'>
       <GoogleButton onClick={handleGoogleSignIn}/>
     </div>
   )

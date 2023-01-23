@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {UserAuth} from '../context/AuthContext'
+import { storage } from 'firebase'
 
 const Account = () => {
   const { logOut, user } = UserAuth();
+  const [fileUpload, setFileUpload] = useState(null)
 
   const handleSignOut = async () => {
     try {
@@ -13,9 +15,10 @@ const Account = () => {
   }
 
   return (
-    <div>
+    <div className='text-center mt-20 text-3xl'>
       <p>Welcome {user?.displayName}</p>
-      <button onClick={handleSignOut}>Logout</button>
+      <input type="file" onChange={(event) => setFileUpload(event.target.files[0])}/>
+      <button onClick={handleSignOut} className='text-lg'>Logout</button>
     </div>
   )
 }
