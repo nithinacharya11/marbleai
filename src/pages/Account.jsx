@@ -1,59 +1,49 @@
-import React, { useState } from 'react';
+import React, {useState, useEffect} from 'react';
 import {UserAuth} from '../context/AuthContext';
-import {storage} from '../firebase';
-import {ref, uploadBytesResumable, getDownloadURL} from 'firebase/storage'
+import { storage } from '../firebase';
+import { ref, uploadBytes, listAll, getDownloadURL } from 'firebase/storage';
+import {v4} from 'uuid';
+// import { Document } from 'react-pdf';
 
 const Account = () => {
-  const { logOut, user } = UserAuth();
+  const [file, setFile] = useState(null);
+  const [fileStatus, setFileStatus] = useState(false);
+  // const [fileUrls, setFileUrls] = useState([]);
+  const { user } = UserAuth();
 
-  const handleSignOut = async () => {
-    try {
-      await logOut()
-    } catch (error) {
+  // const fileListRef = ref(storage, `${user.email}/`)
+  const fileUpload = () => {
+    if(file === null){
+      alert("Choose the file before uploading");
+    };
+    const fileRef = ref(storage, `${user.email}/${file.name + v4()}`);
+    uploadBytes(fileRef, file).then(() => {
+      setFileStatus(true);
+    }).catch(error => {
       console.log(error);
-    }
-  }
-
-  const [progress, setProgress] = useState(0);
-  const formHandler = (e) => {
-    e.preventDefault();
-    const file = e.target[0].files[0];
-    uploadFiles(file);
+    });
   };
 
-  const uploadFiles = (file) => {
-    //
-    if (!file) return;
-    const storageRef = ref(storage, `${user.email}/${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const prog = Math.round(
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-        );
-        setProgress(prog);
-      },
-      (error) => console.log(error),
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          console.log("File available at", downloadURL);
-        });
-      }
-    );
-  };
+  // useEffect(() => {
+  //   listAll(fileListRef).then((response) => {
+  //     response.items.forEach((item) => {
+  //       getDownloadURL(item).then((url) => {
+  //         setFileUrls((prev) => [...prev, url]);
+  //       });
+  //     });
+  //   });
+  // }, [url]);
 
   return (
     <div className='text-center mt-20'>
-      <p className='text-3xl'>Welcome {user?.displayName}</p>
-      <form onSubmit={formHandler} className='flex flex-col justify-center items-center mt-10 mb-10 gap-5'>
-        <input type="file" accept=".pdf, .docx" className="text-sm p-5 ml-10" />
-        <button type="submit" className='text-sm border rounded p-3 bg-gray-600 text-white'>Upload</button>
-      </form>
-      <hr />
-      <h2 className='mt-2'>Uploading  {progress === 100 ? 'done ✅' : `${progress}%`}</h2>
-      <button onClick={handleSignOut} className='text-md mt-20 border rounded px-3 py-1 bg-gray-900 text-white'>Logout</button>
+      <p className='text-3xl mb-4'>Welcome {user?.displayName}</p>
+      <p className='text-sm mb-8'>Upload any .pdf or .docx file</p>
+      <input type="file" onChange={(e) => setFile(e.target.files[0])} accept=".pdf, .docx" className="text-sm p-5 ml-10 font-semibold"/>
+      <button onClick={fileUpload} className='block m-auto text-sm border rounded-lg p-3 bg-[#000300] text-white hover:font-bold mt-8'>Upload</button>
+      <p className='mt-5'>{fileStatus && "File uploaded successfully."}</p>
+      {/* {fileUrls.map((url) => {
+        return <Document file={url} />
+      })} */}
     </div>
   )
 }
